@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fraud Detection Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+
+    <header>
+        <div class="container">
+            <div class="logo">🛡️ FraudShield AI</div>
+        </div>
+    </header>
+
+    <div class="main-content">
+        <h1>Fraud Detection Using AI</h1>
+        <p>Detect fraud using Machine Learning, Deep Learning, and Quantum ML algorithms.</p>
+
+        <!-- ✅ Corrected Upload button using Flask route -->
+        <a href="{{ url_for('upload') }}" class="upload-btn">Upload Dataset</a>
+
+        <div class="features">
+            <div class="feature-box">
+                <h3>Machine Learning</h3>
+                <p>Includes SVM, Random Forest, KNN, Logistic Regression, and more.</p>
+            </div>
+            <div class="feature-box">
+                <h3>Deep Learning</h3>
+                <p>Use powerful Neural Networks like CNN and LSTM to detect complex patterns.</p>
+            </div>
+            <div class="feature-box">
+                <h3>Quantum ML</h3>
+                <p>Faster fraud detection using quantum computing techniques.</p>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fraud Detection AI - Authentication</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- In templates/index.html -->
+     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-illustration">
+            <h1>Fraud Detection AI</h1>
+            <p>Advanced machine learning models to detect fraudulent activities with high accuracy and speed.</p>
+            <div style="margin-top: 2rem; animation: float 6s ease-in-out infinite;">
+                <i class="fas fa-shield-alt" style="font-size: 8rem; opacity: 0.8;"></i>
+            </div>
+        </div>
+        
+        <div class="auth-form-container">
+            <div class="auth-form-box">
+                <h2>Welcome Back</h2>
+                
+                <div class="tab-buttons">
+                    <button class="tab-button active" onclick="showLogin()">Login</button>
+                    <button class="tab-button" onclick="showRegister()">Register</button>
+                </div>
+                
+                <form id="login-form" class="auth-form">
+                    <div class="form-group">
+                        <label for="login-username">Username</label>
+                        <input type="text" id="login-username" class="form-control" placeholder="Enter your username">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="login-password">Password</label>
+                        <input type="password" id="login-password" class="form-control" placeholder="Enter your password">
+                    </div>
+                    
+                    <button type="button" class="btn btn-primary" onclick="login()">Login</button>
+                    
+                    <div id="login-message" class="form-message" style="display: none;"></div>
+                </form>
+                
+                <form id="register-form" class="auth-form" style="display: none;">
+                    <div class="form-group">
+                        <label for="register-username">Username</label>
+                        <input type="text" id="register-username" class="form-control" placeholder="Choose a username">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="register-password">Password</label>
+                        <input type="password" id="register-password" class="form-control" placeholder="Create a password">
+                    </div>
+                    
+                    <button type="button" class="btn btn-primary" onclick="register()">Create Account</button>
+                    
+                    <div id="register-message" class="form-message" style="display: none;"></div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showLogin() {
+            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+            document.querySelector('.tab-button:nth-child(1)').classList.add('active');
+            document.getElementById('login-form').style.display = 'flex';
+            document.getElementById('register-form').style.display = 'none';
+        }
+
+        function showRegister() {
+            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+            document.querySelector('.tab-button:nth-child(2)').classList.add('active');
+            document.getElementById('login-form').style.display = 'none';
+            document.getElementById('register-form').style.display = 'flex';
+        }
+
+        async function login() {
+            const username = document.getElementById('login-username').value;
+            const password = document.getElementById('login-password').value;
+            const messageEl = document.getElementById('login-message');
+
+            // Simple validation
+            if (!username || !password) {
+                messageEl.textContent = 'Please fill in all fields';
+                messageEl.className = 'form-message error-message';
+                messageEl.style.display = 'block';
+                return;
+            }
+
+            try {
+                const res = await fetch("http://127.0.0.1:5000/login", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ username, password })
+                });
+                
+                const data = await res.json();
+                
+                if (res.ok) {
+
+                    messageEl.textContent = 'Login successful! Redirecting...';
+                    messageEl.className = 'form-message success-message';
+                    messageEl.style.display = 'block';
+                    setTimeout(() => window.location.href = "/index", 1500);
+                 } else {
+                    messageEl.textContent = data.error || 'Login failed';
+                    messageEl.className = 'form-message error-message';
+                    messageEl.style.display = 'block';
+                }
+            } catch (error) {
+                messageEl.textContent = "Unable to connect to server";
+                messageEl.className = 'form-message error-message';
+                messageEl.style.display = 'block';
+            }
+        }
+
+        async function register() {
+            const username = document.getElementById('register-username').value;
+            const password = document.getElementById('register-password').value;
+            const messageEl = document.getElementById('register-message');
+
+            // Simple validation
+            if (!username || !password) {
+                messageEl.textContent = 'Please fill in all fields';
+                messageEl.className = 'form-message error-message';
+                messageEl.style.display = 'block';
+                return;
+            }
+
+            try {
+                const res = await fetch("http://127.0.0.1:5000/register", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ username, password })
+                });
+                
+                const data = await res.json();
+                
+                if (res.ok) {
+                    messageEl.textContent = 'Registration successful! You can now login.';
+                    messageEl.className = 'form-message success-message';
+                    messageEl.style.display = 'block';
+                    showLogin();
+                    document.getElementById('login-username').value = username;
+                } else {
+                    messageEl.textContent = data.error || 'Registration failed';
+                    messageEl.className = 'form-message error-message';
+                    messageEl.style.display = 'block';
+                }
+            } catch (error) {
+                messageEl.textContent = "Unable to connect to server";
+                messageEl.className = 'form-message error-message';
+                messageEl.style.display = 'block';
+            }
+        }
+    </script>
+</body>
+</html>

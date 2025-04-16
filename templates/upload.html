@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Dataset | Fraud Detection AI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <header class="header">
+        <div class="logo">
+            <i class="fas fa-shield-alt logo-icon"></i>
+            <span>FraudShield AI</span>
+        </div>
+        
+        <nav class="nav-links">
+            <a href="index.html" class="nav-link">Dashboard</a>
+            <a href="upload.html" class="nav-link active">Upload</a>
+        </nav>
+    </header>
+    
+    <main class="main-content">
+        <section class="upload-section">
+            <h1 class="section-title">Upload Transaction Dataset</h1>
+            
+            <input type="file" id="fileInput" class="upload-box">
+            <p style="text-align: center; color: var(--gray); margin-bottom: 2rem;">
+                Supported formats: CSV, JSON, Excel. Max file size: 50MB
+            </p>
+            
+            <div class="model-selection-row">
+                <div class="model-selection-group">
+                    <h2>Select Model Type</h2>
+                    <select id="modelType" class="model-select">
+                        <option value="">-- Select Model Type --</option>
+                        <option value="ml">Machine Learning (ML)</option>
+                        <option value="dl">Deep Learning (DL)</option>
+                        <option value="qml">Quantum ML (QML)</option>
+                    </select>
+                </div>
+                
+                <div class="model-selection-group">
+                    <h2>Select Algorithm</h2>
+                    <select id="algorithm" class="model-select">
+                        <option value="">-- Select Algorithm --</option>
+                        <option value="Random Forest">Random Forest</option>
+                        <option value="SVM">SVM</option>
+                        <option value="Decision Tree">Decision Tree</option>
+                        <option value="KNN">KNN</option>
+                        <option value="Logistic Regression">Logistic Regression</option>
+                        <option value="Naive Bayes">Naive Bayes</option>
+                        <option value="XGBoost">XGBoost</option>
+                        <option value="DNN">DNN (Deep Neural Network)</option>
+                    </select>
+                </div>
+            </div>
+            
+            <button class="predict-btn" id="predictBtn">
+                <i class="fas fa-chart-line"></i> Predict Accuracy
+            </button>
+            
+            <h3 style="margin-bottom: 0.5rem; color: var(--primary-dark);">Model Accuracy:</h3>
+            <div id="accuracy-result" class="accuracy-result">
+                Select an algorithm and click "Predict Accuracy"
+            </div>
+
+            <p id="recommendation-text" style="margin-top: 1rem; font-size: 1rem; color: var(--gray);"></p>
+        </section>
+    </main>
+
+    <script>
+        $(document).ready(function() {
+            $('#modelType').change(function() {
+                const modelType = $(this).val();
+                let recommendation = '';
+                
+                if (modelType === 'ml') {
+                    recommendation = 'For structured transaction data, we recommend Random Forest or XGBoost for optimal performance.';
+                } else if (modelType === 'dl') {
+                    recommendation = 'For complex patterns in large datasets, Deep Neural Networks (DNN) provide the highest accuracy.';
+                } else if (modelType === 'qml') {
+                    recommendation = 'Quantum ML excels with extremely large datasets, providing near-instant results for real-time systems.';
+                } else {
+                    recommendation = 'Based on your data characteristics, we recommend using Random Forest for optimal performance.';
+                }
+                
+                $('#recommendation-text').text(recommendation);
+            });
+            
+            $('#predictBtn').click(function() {
+                const selectedModel = $('#algorithm').val();
+                const modelType = $('#modelType').val();
+                
+                if (!modelType) {
+                    $('#accuracy-result').text('Please select a model type first').css('color', 'var(--danger)');
+                    return;
+                }
+                
+                if (!selectedModel) {
+                    $('#accuracy-result').text('Please select an algorithm').css('color', 'var(--danger)');
+                    return;
+                }
+                
+                $('#predictBtn').html('<i class="fas fa-spinner fa-spin"></i> Processing...').prop('disabled', true);
+                $('#accuracy-result').text('Evaluating model performance...').css('color', 'var(--gray)');
+                
+                setTimeout(function() {
+                    $.ajax({
+                        url: "http://127.0.0.1:5000/accuracy",
+                        type: "GET",
+                        data: { 
+                            model_name: selectedModel,
+                            model_type: modelType
+                        },
+                        success: function(response) {
+                            if (response[selectedModel]) {
+                                const accuracy = (response[selectedModel] * 100).toFixed(2);
+                                $('#accuracy-result').html(`<strong>${selectedModel}</strong> Accuracy: <span style="color: var(--success);">${accuracy}%</span>`);
+                                
+                                if (accuracy > 95) {
+                                    $('#recommendation-text').html(`<span style="color: var(--success);">Excellent choice!</span> ${selectedModel} achieves high accuracy for this data type.`);
+                                } else if (accuracy > 85) {
+                                    $('#recommendation-text').html(`Good performance. For even better results, consider trying <strong>XGBoost</strong> or <strong>DNN</strong>.`);
+                                } else {
+                                    $('#recommendation-text').html(`<span style="color: var(--warning);">Fair performance.</span> We recommend trying <strong>Random Forest</strong> or <strong>DNN</strong> for better results.`);
+                                }
+                            } else {
+                                $('#accuracy-result').text('Error: Could not retrieve accuracy').css('color', 'var(--danger)');
+                            }
+                        },
+                        error: function() {
+                            $('#accuracy-result').text('Error: Unable to fetch accuracy').css('color', 'var(--danger)');
+                        },
+                        complete: function() {
+                            $('#predictBtn').html('<i class="fas fa-chart-line"></i> Predict Accuracy').prop('disabled', false);
+                        }
+                    });
+                }, 1500);
+            });
+        });
+    </script>
+</body>
+</html>
