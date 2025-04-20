@@ -11,10 +11,11 @@ from sklearn.naive_bayes import GaussianNB
 from sklearn.linear_model import LogisticRegression
 from sklearn.neighbors import KNeighborsClassifier
 from imblearn.over_sampling import SMOTE
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense
 import xgboost as xgb
 import datetime
 from flask_cors import CORS
-from tensorflow.keras.models import load_model
 
 app = Flask(__name__, static_folder='static', template_folder='templates')
 CORS(app)
@@ -50,11 +51,6 @@ xgb_model = None
 dnn_model = None
 accuracies = {}
 
-# -------- Load pre-trained model -------- #
-dnn_model = load_model("dnn_model.h5")  # Load the pre-trained DNN model
-xgb_model = xgb.XGBClassifier(eval_metric='logloss', random_state=42)
-xgb_model.load_model("xgb_model.json")  # Load the pre-trained XGBoost model
-
 # -------- Lazy Training Functions -------- #
 def train_classical_models():
     classifiers = {
@@ -73,6 +69,26 @@ def train_classical_models():
         accs[name] = round(accuracy_score(y_test, y_pred), 4)
         trained[name] = clf
     return trained, accs
+
+def train_xgb():
+    model = xgb.XGBClassifier(eval_metric='logloss', random_state=42)
+    model.fit(X_train_scaled, y_train)
+    y_pred = model.predict(X_test_scaled)
+    acc = round(accuracy_score(y_test, y_pred), 4)
+    return model, acc
+
+def train_dnn():
+    model = Sequential([
+        Dense(64, input_dim=X_train_scaled.shape[1], activation="relu"),
+        Dense(32, activation="relu"),
+        Dense(16, activation="relu"),
+        Dense(1, activation="sigmoid")
+    ])
+    model.compile(loss="binary_crossentropy", optimizer="adam", metrics=["accuracy"])
+    model.fit(X_train_scaled, y_train, epochs=10, batch_size=32, verbose=0, validation_data=(X_test_scaled, y_test))
+    dnn_pred = (model.predict(X_test_scaled) > 0.5).astype(int)
+    acc = round(accuracy_score(y_test, dnn_pred), 4)
+    return model, acc
 
 # -------- ROUTES -------- #
 
@@ -103,8 +119,6 @@ def register():
 def index():
     global models, xgb_model, dnn_model, accuracies
     models, classical_acc = train_classical_models()
-
-    # Load pre-trained models
     xgb_model, xgb_acc = train_xgb()
     dnn_model, dnn_acc = train_dnn()
 
